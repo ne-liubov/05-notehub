@@ -22,9 +22,9 @@ import {
   showSuccessUpdate,
   showSuccessDelete,
 } from "../ErrorMessage/Message";
-import type { Note, NewNoteData } from "../types/note";
-import { fetchNotes } from "../services/noteService";
-import { useNoteMutations } from "../mutations/noteMutations";
+import type { Note, NewNoteData } from "../../types/note";
+import { fetchNotes } from "../../services/noteService";
+import { useNoteMutations } from "../../mutations/noteMutations";
 
 export default function App() {
   const [search, setSearch] = useState("");

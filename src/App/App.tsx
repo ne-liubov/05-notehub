@@ -59,7 +59,7 @@ export default function App() {
   };
 
   const openModal = () => {
-    setSelectedNote(null); // пустая форма для создания заметки
+    setSelectedNote(null); // пустая форма для создания таски
     setIsModalOpen(true);
   };
 
@@ -80,8 +80,11 @@ export default function App() {
         showSuccessUpdate();
       } else {
         await createNoteMutation.mutateAsync(note); // создание таски
-        showSuccessCreate();
+        showSuccessCreate(); // Сбрасываем поиск и страницу при создании новой заметки
+        setSearch("");
+        setPage(1);
       }
+
       queryClient.invalidateQueries({ queryKey: ["notes", search, page] });
       closeModal();
     } catch {
@@ -103,7 +106,7 @@ export default function App() {
       <Toaster position="top-center" />
 
       <header className={css.toolbar}>
-        <SearchBox onSearch={handleSearch} />
+        <SearchBox searchValue={search} onSearch={handleSearch} />
 
         {isSuccess && totalPages > 1 && (
           <Pagination page={page} total={totalPages} onChange={setPage} />

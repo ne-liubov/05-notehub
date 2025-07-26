@@ -1,21 +1,26 @@
 import css from "./SearchBox.module.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 interface SearchBoxProps {
+  searchValue: string;
   onSearch: (value: string) => void;
 }
 
-export default function SearchBox({ onSearch }: SearchBoxProps) {
-  const [searchText, setSearchText] = useState(""); // текст пошуку
+export default function SearchBox({ searchValue, onSearch }: SearchBoxProps) {
+  const [searchText, setSearchText] = useState(""); // текст поиска
+
+  useEffect(() => {
+    setSearchText(searchValue); // синхронизация локального состояния с пропом (для очистки при создании таски)
+  }, [searchValue]);
 
   const debounced = useDebouncedCallback((value: string) => {
-    onSearch(value); // відправка відкладеного запиту
+    onSearch(value); // отправка отложеного запроса
   }, 500);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchText(e.target.value);
-    debounced(e.target.value); // відкладаємо сам запит
+    debounced(e.target.value); // откладываем сам запрос
   };
 
   return (

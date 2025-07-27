@@ -12,12 +12,8 @@ export const showErrorDelete = () => {
   toast.error("Failed to delete the note");
 };
 
-export const showSuccessCreate = () => {
-  toast.success("Note successfully created");
-};
-
-export const showSuccessUpdate = () => {
-  toast.success("Note successfully updated");
+export const showSuccessSave = () => {
+  toast.success("Note successfully saved");
 };
 
 export const showSuccessDelete = () => {

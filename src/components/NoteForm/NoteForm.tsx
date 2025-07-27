@@ -1,15 +1,12 @@
 import css from "./NoteForm.module.css";
 import { useId } from "react";
-import type { Note, NewNoteData } from "../../types/note";
 import { Formik, Form, Field, ErrorMessage } from "formik";
-import type { FormikHelpers } from "formik";
 import * as Yup from "yup";
-
-interface NoteFormProps {
-  onClose: () => void;
-  onAdd: (note: Note | NewNoteData) => Promise<void>;
-  note?: Note;
-}
+import type { FormikHelpers } from "formik";
+import type { NewNote } from "../../types/note";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createNote } from "../../services/noteService";
+import { showErrorSave, showSuccessSave } from "../Message/Message";
 
 const NoteFormSchema = Yup.object().shape({
   title: Yup.string()
@@ -22,65 +19,83 @@ const NoteFormSchema = Yup.object().shape({
     .required("Tag is required"),
 });
 
-export default function NoteForm({ onClose, onAdd, note }: NoteFormProps) {
-  const titleId = useId();
-  const contentId = useId();
-  const tagId = useId();
+interface FormValues {
+  title: string;
+  content: string;
+  tag: "Todo" | "Work" | "Personal" | "Meeting" | "Shopping";
+}
 
-  const initialValues: NewNoteData = note
-    ? { title: note.title, content: note.content, tag: note.tag }
-    : { title: "", content: "", tag: "Todo" };
+const initialValues: FormValues = {
+  title: "",
+  content: "",
+  tag: "Todo",
+};
 
-  const handleSubmit = async (
-    values: NewNoteData,
-    actions: FormikHelpers<NewNoteData>
+interface NoteFormProps {
+  onClose: () => void;
+}
+
+export default function NoteForm({ onClose }: NoteFormProps) {
+  const fieldId = useId();
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: (newNote: NewNote) => createNote(newNote),
+    onSuccess() {
+      queryClient.invalidateQueries({
+        queryKey: ["notes"],
+      });
+      showSuccessSave();
+      onClose();
+    },
+    onError() {
+      showErrorSave();
+    },
+  });
+
+  const handleSubmit = (
+    values: FormValues,
+    FormikHelpers: FormikHelpers<FormValues>
   ) => {
-    if (note) {
-      await onAdd({ ...note, ...values }); // обновление с id
-    } else {
-      await onAdd(values); // создание без id
-    }
-
-    actions.resetForm();
-    onClose();
+    mutation.mutate(values);
+    FormikHelpers.resetForm();
   };
 
   return (
     <Formik
       initialValues={initialValues}
-      validationSchema={NoteFormSchema}
       onSubmit={handleSubmit}
-      enableReinitialize
+      validationSchema={NoteFormSchema}
     >
       <Form className={css.form}>
         <div className={css.formGroup}>
-          <label htmlFor={`${titleId}-title`}>Title</label>
+          <label htmlFor="title">Title</label>
           <Field
-            id={`${titleId}-title`}
+            id={`${fieldId}-title`}
             type="text"
             name="title"
             className={css.input}
           />
-          <ErrorMessage name="title" component="span" className={css.error} />
+          <ErrorMessage component="span" name="title" className={css.error} />
         </div>
 
         <div className={css.formGroup}>
-          <label htmlFor={`${contentId}-content`}>Content</label>
+          <label htmlFor="content">Content</label>
           <Field
             as="textarea"
-            id={`${contentId}-content`}
+            id={`${fieldId}-content`}
             name="content"
-            rows={8}
+            rows="8"
             className={css.textarea}
           />
-          <ErrorMessage name="content" component="span" className={css.error} />
+          <ErrorMessage component="span" name="content" className={css.error} />
         </div>
 
         <div className={css.formGroup}>
-          <label htmlFor={`${tagId}-tag`}>Tag</label>
+          <label htmlFor="tag">Tag</label>
           <Field
             as="select"
-            id={`${tagId}-tag`}
+            id={`${fieldId}-tag`}
             name="tag"
             className={css.select}
           >
@@ -90,15 +105,15 @@ export default function NoteForm({ onClose, onAdd, note }: NoteFormProps) {
             <option value="Meeting">Meeting</option>
             <option value="Shopping">Shopping</option>
           </Field>
-          <ErrorMessage name="tag" component="span" className={css.error} />
+          <ErrorMessage component="span" name="tag" className={css.error} />
         </div>
 
         <div className={css.actions}>
-          <button type="button" onClick={onClose} className={css.cancelButton}>
+          <button type="button" className={css.cancelButton} onClick={onClose}>
             Cancel
           </button>
           <button type="submit" className={css.submitButton} disabled={false}>
-            {note ? "Update note" : "Create note"}{" "}
+            Create note
           </button>
         </div>
       </Form>
